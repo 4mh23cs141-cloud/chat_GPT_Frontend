@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import React, { useState } from 'react';
 import {
   Settings,
@@ -6,7 +6,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   User,
-  LayoutGrid,
   Trash2
 } from 'lucide-react';
 import './App.css';
@@ -15,22 +14,25 @@ import About from './pages/about';
 import Contact from './pages/contact';
 import Login from './pages/Login';
 import Signup from './pages/signup';
+import Dashboard from './pages/Dashboard';
 
-// Inlined Sidebar Component
+// --- Sidebar Component ---
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
 
-  const recentChats = [
+  // Hide sidebar on Login and Signup pages for a cleaner UI
+  const hideSidebar = location.pathname === '/login' || location.pathname === '/signup';
+  if (hideSidebar) return null;
 
-  ];
+  const recentChats = [];
 
   return (
     <div className={`flex flex-col h-screen bg-[#f9f9f9] border-r border-gray-200 transition-all duration-300 relative ${isOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
       <div className={`absolute top-4 ${isOpen ? 'right-4' : '-right-12'} z-50`}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 hover:bg-gray-200 rounded-lg transition-colors bg-[#f9f9f9] border border-gray-200 shadow-sm md:border-none md:shadow-none"
+          className="p-2 hover:bg-gray-200 rounded-lg transition-colors bg-[#f9f9f9] border border-gray-200 shadow-sm"
         >
           {isOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
         </button>
@@ -38,7 +40,7 @@ const Sidebar = () => {
 
       <div className="flex flex-col h-full p-3 pt-4">
         <button
-          onClick={() => window.location.href = '/'}
+          onClick={() => window.location.href = '/chat'}
           className="flex items-center justify-between w-full p-3 mb-4 rounded-xl hover:bg-gray-200 transition-all group"
         >
           <div className="flex items-center gap-3">
@@ -49,26 +51,15 @@ const Sidebar = () => {
           </div>
         </button>
 
-        <div className="space-y-1 mb-6">
-          {/* Main navigation links moved to Header */}
-        </div>
-
         <div className="flex-1 overflow-y-auto no-scrollbar">
-          <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Recent
-          </div>
+          <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Recent</div>
           <div className="space-y-0.5">
             {recentChats.map((chat) => (
-              <div
-                key={chat.id}
-                className="group flex items-center justify-between px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-200 cursor-pointer transition-all"
-              >
+              <div key={chat.id} className="group flex items-center justify-between px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-200 cursor-pointer transition-all">
                 <span className="text-sm truncate pr-2">{chat.title}</span>
-                <div className="hidden group-hover:flex items-center gap-1">
-                  <button className="p-1 hover:bg-gray-300 rounded transition-colors">
-                    <Trash2 size={12} />
-                  </button>
-                </div>
+                <button className="hidden group-hover:block p-1 hover:bg-gray-300 rounded">
+                  <Trash2 size={12} />
+                </button>
               </div>
             ))}
           </div>
@@ -89,21 +80,24 @@ const Sidebar = () => {
   );
 };
 
+// --- Main App Component ---
 function App() {
   return (
     <Router>
       <div className="flex h-screen w-full bg-white text-gray-900 overflow-hidden">
-        {/* Sidebar */}
         <Sidebar />
 
-        {/* Main Content Area */}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <Routes>
+            {/* Added /chat route so navigate('/chat') works */}
+            <Route path="/chat" element={<Home />} />
+
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </main>
       </div>

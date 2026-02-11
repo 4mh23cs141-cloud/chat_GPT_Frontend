@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const Header = () => {
     return (
-        <header className="h-14 flex items-center justify-between px-4 sticky top-0 bg-white/80 backdrop-blur-md z-20">
+        <header className="h-16 flex items-center justify-between px-6 sticky top-0 bg-gradient-to-r from-white/60 via-blue-50/60 to-white/60 backdrop-blur-xl border-b border-white/20 shadow-sm z-50 transition-all duration-300">
             <div className="flex items-center gap-2">
                 <button className="flex items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors group">
                     <span className="font-semibold text-gray-800">SHIVA'S GPT</span>
@@ -16,6 +16,7 @@ const Header = () => {
                     <Link to="/" className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition-all">Home</Link>
                     <Link to="/about" className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition-all">About</Link>
                     <Link to="/contact" className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition-all">Contact</Link>
+                    <Link to="/dashboard" className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition-all">Dashboard</Link>
                 </nav>
             </div>
 

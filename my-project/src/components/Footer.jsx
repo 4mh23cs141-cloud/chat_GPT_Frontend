@@ -48,8 +48,8 @@ const Footer = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-100 gap-4">
                     <div className="flex items-center gap-2">
-                        <span className="font-bold text-xl text-gray-900">ChatGPT</span>
-                        <span className="text-gray-400 text-sm">© 2026 OpenAI Replica</span>
+                        <span className="font-bold text-xl text-gray-900">SHIVA'S GPT</span>
+                        <span className="text-gray-400 text-sm">© 2026 OpenAI</span>
                     </div>
                     <div className="flex gap-6">
                         <a href="#" className="text-xs text-gray-400 hover:text-gray-600">Privacy policy</a>
