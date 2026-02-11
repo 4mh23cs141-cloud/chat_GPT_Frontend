@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import {
   Settings,
@@ -15,14 +15,16 @@ import Contact from './pages/contact';
 import Login from './pages/Login';
 import Signup from './pages/signup';
 import Dashboard from './pages/Dashboard';
+import Header from './components/Header';
 
 // --- Sidebar Component ---
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Hide sidebar on Login and Signup pages for a cleaner UI
-  const hideSidebar = location.pathname === '/login' || location.pathname === '/signup';
+  // Only show sidebar on Home and Chat pages
+  const hideSidebar = location.pathname !== '/' && location.pathname !== '/chat';
   if (hideSidebar) return null;
 
   const recentChats = [];
@@ -40,7 +42,7 @@ const Sidebar = () => {
 
       <div className="flex flex-col h-full p-3 pt-4">
         <button
-          onClick={() => window.location.href = '/chat'}
+          onClick={() => navigate('/chat')}
           className="flex items-center justify-between w-full p-3 mb-4 rounded-xl hover:bg-gray-200 transition-all group"
         >
           <div className="flex items-center gap-3">
@@ -87,7 +89,8 @@ function App() {
       <div className="flex h-screen w-full bg-white text-gray-900 overflow-hidden">
         <Sidebar />
 
-        <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative text-gray-900 border-none">
+          <Header />
           <Routes>
             {/* Added /chat route so navigate('/chat') works */}
             <Route path="/chat" element={<Home />} />

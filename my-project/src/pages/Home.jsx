@@ -9,7 +9,6 @@ import {
   ArrowUp,
   User
 } from "lucide-react";
-import Header from "../components/Header";
 
 // Inlined ChatMessage Component
 const ChatMessage = ({ role, content }) => {
@@ -100,7 +99,7 @@ const ChatInput = ({ onSend, value, setValue, isLoading }) => {
         </div>
       </div>
       <p className="text-[11px] text-gray-400 text-center mt-3">
-        ChatGPT can make mistakes. Check important info.
+        SHIVA'S GPT can make mistakes. Check important info.
       </p>
     </div>
   );
@@ -121,42 +120,40 @@ const Home = () => {
   }, [messages]);
 
   const handleSend = async () => {
-  if (!inputValue.trim()) return;
+    if (!inputValue.trim()) return;
 
-  const userMessage = { role: "user", content: inputValue };
-  setMessages((prev) => [...prev, userMessage]);
-  setInputValue("");
-  setIsLoading(true);
+    const userMessage = { role: "user", content: inputValue };
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setIsLoading(true);
 
-  // Simulate AI response
-  setTimeout(() => {
-    const userText = userMessage.content.trim().toLowerCase();
+    // Simulate AI response
+    setTimeout(() => {
+      const userText = userMessage.content.trim().toLowerCase();
 
-    let replyText = "";
+      let replyText = "";
 
-    if (userText === "i am sanjay") {
-      replyText = "PS HULI, how can I assist today?";
-    } else {
-      replyText = `I'm SHIVA'S GPT. I received your message: "${userMessage.content}". How can I assist today?`;
-    }
+      if (userText === "i am sanjay") {
+        replyText = "PS HULI, how can I assist today?";
+      } else {
+        replyText = `I'm SHIVA'S GPT. I received your message: "${userMessage.content}". How can I assist today?`;
+      }
 
-    const aiMessage = {
-      role: "assistant",
-      content: replyText,
-    };
+      const aiMessage = {
+        role: "assistant",
+        content: replyText,
+      };
 
-    setMessages((prev) => [...prev, aiMessage]);
-    setIsLoading(false);
-  }, 1000);
-};
+      setMessages((prev) => [...prev, aiMessage]);
+      setIsLoading(false);
+    }, 1000);
+  };
 
 
   const isLanding = messages.length === 0;
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white relative overflow-hidden">
-      <Header />
-
       <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
         {isLanding ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
