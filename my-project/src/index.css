@@ -1,52 +1,42 @@
 @import "tailwindcss";
 
 :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
-
-    color-scheme: light dark;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #ffffff;
-
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color-scheme: dark;
+    background-color: #0B0F19;
 }
 
 body {
     margin: 0;
     display: flex;
-    min-width: 320px;
     min-height: 100vh;
-    color: #213547;
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
+    background: radial-gradient(circle at 50% 50%, #131B2C 0%, #0B0F19 100%);
+    color: #f3f4f6;
+    overflow: hidden;
 }
 
-@keyframes gradient {
-    0% {
-        background-position: 0% 50%;
-    }
+/* Glassmorphism primitives */
+.glass {
+    background: rgba(19, 27, 44, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
 
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
+.glass-indigo {
+    background: rgba(79, 70, 229, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(79, 70, 229, 0.1);
 }
 
 #root {
     width: 100%;
+    height: 100vh;
 }
 
-/* Custom Scrollbar */
+/* Global Scrollbar */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -54,23 +44,52 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #e5e7eb;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #d1d5db;
+    background: rgba(255, 255, 255, 0.2);
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-.no-scrollbar {
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
+/* Animated Background Orb */
+.orb {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -1;
+    opacity: 0.15;
+    pointer-events: none;
+}
+
+.orb-primary {
+    background: #4f46e5;
+    top: -200px;
+    left: -100px;
+    animation: float 20s ease-in-out infinite;
+}
+
+.orb-secondary {
+    background: #9333ea;
+    bottom: -200px;
+    right: -100px;
+    animation: float 25s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(50px, 100px);
+    }
 }

@@ -1,112 +1,212 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Activity,
     MessageSquare,
-    Settings,
     Clock,
     TrendingUp,
     Shield,
     Zap,
-    Users
+    Cpu,
+    Send,
+    Loader2,
+    Sparkles
 } from 'lucide-react';
 
 const Dashboard = () => {
-    const stats = [
-        { label: 'Total Messages', value: '1,284', icon: MessageSquare, color: 'text-blue-600', bg: 'bg-blue-50' },
-        { label: 'AI Responses', value: '1,280', icon: Zap, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-        { label: 'Conversations', value: '42', icon: Activity, color: 'text-purple-600', bg: 'bg-purple-50' },
-        { label: 'Community Rank', value: '#12', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
-    ];
+    const navigate = useNavigate();
+    const [input, setInput] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const messagesEndRef = useRef(null);
 
-    const recentActivity = [
-        { id: 1, title: 'React Performance Audit', time: '2 hours ago', status: 'In Progress' },
-        { id: 2, title: 'FastAPI Integration Fix', time: '5 hours ago', status: 'Completed' },
-        { id: 3, title: 'Mesh Gradient CSS Design', time: 'Yesterday', status: 'Completed' },
-        { id: 4, title: 'Auth Flow Refactoring', time: '2 days ago', status: 'Completed' },
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/history?token=${token}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setMessages(data.map(m => ({ role: m.role, text: m.content })));
+                } else if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    navigate('/login');
+                }
+            } catch (err) {
+                console.error("Dashboard history load failed:", err);
+            } finally {
+                setInitialLoading(false);
+            }
+        };
+
+        fetchHistory();
+    }, [navigate]);
+
+    useEffect(() => {
+        if (!initialLoading) scrollToBottom();
+    }, [messages, initialLoading]);
+
+    const handleSend = async () => {
+        if (!input.trim() || loading) return;
+
+        const token = localStorage.getItem('token');
+        const userMsg = input;
+        setMessages(prev => [...prev, { role: "user", text: userMsg }]);
+        setInput("");
+        setLoading(true);
+
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/ask?token=${token}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userMsg, system_prompt: "You are the Nexus Control Center Assistant." })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setMessages(prev => [...prev, { role: "model", text: data.response }]);
+            } else {
+                throw new Error("Neural transmission failed");
+            }
+        } catch (e) {
+            setMessages(prev => [...prev, { role: "model", text: "⚠️ Error in neural processing." }]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const stats = [
+        { label: 'Total Messages', value: messages.length.toString(), icon: MessageSquare, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+        { label: 'Neural Power', value: '98%', icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+        { label: 'Chat Sessions', value: '1', icon: Activity, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+        { label: 'Rank', value: '#12', icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     ];
 
     return (
-        <div className="flex-1 flex flex-col p-6 lg:p-10 bg-[#f9f9f9] overflow-y-auto no-scrollbar">
-            <div className="max-w-6xl mx-auto w-full">
-                <header className="mb-10">
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">User Dashboard</h1>
-                    <p className="text-gray-500 mt-1">Manage your account and view your recent chat activity.</p>
+        <div className="flex-1 flex flex-col p-6 lg:p-10 bg-[#0B0F19] text-white overflow-y-auto custom-scrollbar">
+            <div className="max-w-7xl mx-auto w-full">
+                <header className="mb-12">
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">Command Center</h1>
+                    <p className="text-gray-500 mt-2 text-sm">Nexus AI System Status & Control</p>
                 </header>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                     {stats.map((stat, index) => (
-                        <div key={index} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className={`p-3 rounded-2xl ${stat.bg}`}>
-                                    <stat.icon size={24} className={stat.color} />
-                                </div>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Live</span>
+                        <div key={index} className="bg-[#131B2C] p-6 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all duration-300 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <stat.icon size={64} className={stat.color} />
                             </div>
-                            <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                            <p className="text-sm text-gray-500 mt-1">{stat.label}</p>
+                            <div className="flex items-center justify-between mb-4 relative z-10">
+                                <div className={`p-3 rounded-xl ${stat.bg}`}>
+                                    <stat.icon size={22} className={stat.color} />
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider border border-white/10 px-2 py-0.5 rounded-full">Live</span>
+                            </div>
+                            <h3 className="text-3xl font-bold text-white relative z-10">{stat.value}</h3>
+                            <p className="text-xs font-medium text-gray-400 mt-1 relative z-10 uppercase tracking-wide">{stat.label}</p>
                         </div>
                     ))}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Recent Activity */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <section className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                    <Clock size={20} className="text-gray-400" />
-                                    Recent Activity
-                                </h3>
-                                <button className="text-sm font-semibold text-black hover:underline transition-all">View All</button>
-                            </div>
-                            <div className="space-y-4">
-                                {recentActivity.map((item) => (
-                                    <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors cursor-pointer group">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100 group-hover:border-black transition-colors">
-                                                <MessageSquare size={18} className="text-gray-600" />
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-800">{item.title}</p>
-                                                <p className="text-xs text-gray-400">{item.time}</p>
-                                            </div>
-                                        </div>
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                                            }`}>
-                                            {item.status}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    </div>
-
-                    {/* Quick Settings & Profile */}
-                    <div className="space-y-6">
-                        <section className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <Shield size={20} className="text-gray-400" />
-                                Security Status
+                    {/* Integrated Chat Section */}
+                    <div className="lg:col-span-2 flex flex-col bg-[#131B2C] rounded-3xl border border-white/5 overflow-hidden h-[500px]">
+                        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <Cpu size={18} className="text-indigo-400" />
+                                Nexus Core Interface
                             </h3>
-                            <div className="p-4 bg-green-50 border border-green-100 rounded-2xl mb-6">
-                                <p className="text-sm font-semibold text-green-800">Account is protected</p>
-                                <p className="text-[11px] text-green-600 mt-1">Two-factor authentication is active and your recovery email is verified.</p>
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">Synced</span>
                             </div>
-                            <button className="w-full py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold text-gray-700 text-sm">
-                                Review Security Settings
-                            </button>
-                        </section>
+                        </div>
 
-                        <section className="bg-black p-8 rounded-3xl shadow-lg relative overflow-hidden group">
-                            <div className="relative z-10">
-                                <h3 className="text-xl font-bold text-white mb-2">Upgrade to Pro</h3>
-                                <p className="text-gray-400 text-sm mb-6">Get unlimited access to GPT-4o and faster response times.</p>
-                                <button className="w-full py-3 bg-white text-black rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform">
-                                    Start Free Trial
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                            {messages.map((msg, i) => (
+                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[80%] p-4 rounded-2xl text-sm ${msg.role === 'user'
+                                        ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-100'
+                                        : 'bg-white/5 border border-white/10 text-gray-300'
+                                        }`}>
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+                            {loading && (
+                                <div className="flex justify-start">
+                                    <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-2">
+                                        <Loader2 size={16} className="animate-spin text-indigo-400" />
+                                        <span className="text-xs text-gray-500">Processing...</span>
+                                    </div>
+                                </div>
+                            )}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        <div className="p-4 bg-[#0B0F19]/50 border-t border-white/5">
+                            <div className="relative flex items-center gap-2">
+                                <input
+                                    className="flex-1 bg-[#131B2C] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-gray-600"
+                                    placeholder="Input command..."
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                                />
+                                <button
+                                    onClick={handleSend}
+                                    disabled={loading || !input.trim()}
+                                    className="p-3 bg-white text-black rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50"
+                                >
+                                    <Send size={18} />
                                 </button>
                             </div>
-                            <Zap className="absolute -bottom-4 -right-4 text-white/10 w-32 h-32 group-hover:rotate-12 transition-transform duration-500" />
+                        </div>
+                    </div>
+
+                    {/* Secondary Info Column */}
+                    <div className="space-y-6">
+                        <section className="bg-gradient-to-br from-indigo-900 to-[#131B2C] p-8 rounded-3xl border border-white/10 relative overflow-hidden">
+                            <div className="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/30 blur-[60px] rounded-full" />
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Shield size={20} className="text-indigo-300" />
+                                    <h3 className="text-lg font-bold text-white">Security</h3>
+                                </div>
+                                <div className="p-4 bg-black/20 border border-white/10 rounded-2xl mb-6 backdrop-blur-md">
+                                    <p className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                                        Active
+                                    </p>
+                                    <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">Neural firewall is operational. Encryption at 256-bit.</p>
+                                </div>
+                                <button className="w-full py-3 border border-white/10 rounded-xl hover:bg-white/5 transition-all font-semibold text-gray-300 text-sm">
+                                    Audit System
+                                </button>
+                            </div>
+                        </section>
+
+                        <section className="bg-white text-black p-8 rounded-3xl relative overflow-hidden group">
+                            <div className="relative z-10">
+                                <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                                    <Sparkles size={20} className="text-indigo-600" />
+                                    Nexus Pro
+                                </h3>
+                                <p className="text-gray-600 text-sm mb-6">Experience the future of thought.</p>
+                                <button className="w-full py-3 bg-black text-white rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform">
+                                    Upgrade
+                                </button>
+                            </div>
                         </section>
                     </div>
                 </div>

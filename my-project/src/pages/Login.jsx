@@ -1,161 +1,127 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Chrome, Github, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Chrome, Github, Loader2, AlertCircle, Cpu } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
-    
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-    });
-
+    const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState(''); // New state for success message
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
-        setSuccess('');
 
         try {
             const response = await fetch('http://127.0.0.1:8000/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
-
             const data = await response.json();
 
             if (response.ok) {
-                setSuccess('Login successful!'); // Set success message
-                
-                if (data.access_token) {
-                    localStorage.setItem('token', data.access_token);
-                }
-                
-                // Wait 1.5 seconds so the user sees the success message before redirecting
-                setTimeout(() => {
-                    navigate('/chat');
-                }, 1500);
+                if (data.access_token) localStorage.setItem('token', data.access_token);
+                navigate('/');
             } else {
-                // Set custom failed message
-                setError(data.detail || 'Login failed: Invalid email or password');
+                setError(data.detail || 'Access Denied: Invalid credentials.');
             }
         } catch (err) {
-            setError('Login failed: Server connection failed');
+            setError('System Failure: Server unreachable.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#f9f9f9]">
-            <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-[#0B0F19] text-white p-4">
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/10 blur-[100px] rounded-full" />
+            </div>
+
+            <div className="w-full max-w-md bg-[#131B2C]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
-                    <p className="text-gray-500">Log in to your SHIVA'S GPT account to continue</p>
-                </div>
-
-                <div className="space-y-4 mb-6">
-                    <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-medium text-gray-700">
-                        <Chrome size={20} className="text-red-500" />
-                        Continue with Google
-                    </button>
-                    <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-medium text-gray-700">
-                        <Github size={20} className="text-gray-900" />
-                        Continue with GitHub
-                    </button>
-                </div>
-
-                <div className="relative mb-6">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-100"></div>
+                    <div className="w-12 h-12 bg-indigo-600 rounded-xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-indigo-600/30">
+                        <Cpu className="text-white" size={24} />
                     </div>
-                    <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-white text-gray-400 uppercase tracking-wider text-[10px] font-bold">OR</span>
-                    </div>
+                    <h1 className="text-2xl font-bold tracking-tight">Initialize Session</h1>
+                    <p className="text-gray-500 text-sm mt-2">Welcome back to Nexus AI</p>
                 </div>
 
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                    
-                    {/* Display Login Failed Message */}
+                <form className="space-y-5" onSubmit={handleSubmit}>
                     {error && (
-                        <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 rounded-xl border border-red-100 mb-2">
-                            <AlertCircle size={18} />
+                        <div className="flex items-center gap-2 p-3 text-xs text-red-400 bg-red-500/10 rounded-xl border border-red-500/20">
+                            <AlertCircle size={16} />
                             <span>{error}</span>
                         </div>
                     )}
 
-                    {/* Display Login Successful Message */}
-                    {success && (
-                        <div className="flex items-center gap-2 p-3 text-sm text-green-600 bg-green-50 rounded-xl border border-green-100 mb-2">
-                            <CheckCircle2 size={18} />
-                            <span>{success}</span>
-                        </div>
-                    )}
-
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-600 px-1">Email address</label>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-gray-400 ml-1">Email Identifier</label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                             <input
                                 type="email"
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
                                 required
+                                className="w-full pl-10 pr-4 py-3 bg-[#0B0F19] border border-white/10 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-sm text-white placeholder-gray-600"
                                 placeholder="name@example.com"
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-black outline-none transition-all text-gray-800"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                            <label className="text-xs font-semibold text-gray-600 px-1">Password</label>
-                            <a href="#" className="text-[10px] font-bold text-gray-400 hover:text-black uppercase">Forgot?</a>
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between items-center px-1">
+                            <label className="text-xs font-semibold text-gray-400">Passcode</label>
+                            <a href="#" className="text-[10px] text-indigo-400 hover:text-indigo-300">Forgot?</a>
                         </div>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                             <input
                                 type="password"
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
+                                className="w-full pl-10 pr-4 py-3 bg-[#0B0F19] border border-white/10 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-sm text-white placeholder-gray-600"
                                 placeholder="••••••••"
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-black outline-none transition-all text-gray-800"
                             />
                         </div>
                     </div>
 
-                    <button 
+                    <button
                         type="submit"
                         disabled={loading}
-                        className="w-full flex items-center justify-center py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-800 transition-all shadow-md mt-2 disabled:bg-gray-400"
+                        className="w-full flex items-center justify-center py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-gray-200 transition-all shadow-lg mt-2 disabled:opacity-50"
                     >
-                        {loading ? <Loader2 className="animate-spin mr-2" size={20} /> : 'Continue'}
+                        {loading ? <Loader2 className="animate-spin mr-2" size={18} /> : 'Connect'}
                     </button>
                 </form>
 
-                <p className="text-center text-sm text-gray-500 mt-8">
-                    Don't have an account? <Link to="/signup" className="text-black font-semibold hover:underline">Sign up</Link>
+                <div className="relative my-8">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
+                    <div className="relative flex justify-center"><span className="px-2 bg-[#131B2C] text-gray-500 text-[10px] uppercase tracking-wider">Or continue with</span></div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <button className="flex items-center justify-center gap-2 py-2.5 bg-[#0B0F19] border border-white/10 rounded-xl hover:bg-white/5 transition-all text-sm text-gray-300">
+                        <Chrome size={18} /> Google
+                    </button>
+                    <button className="flex items-center justify-center gap-2 py-2.5 bg-[#0B0F19] border border-white/10 rounded-xl hover:bg-white/5 transition-all text-sm text-gray-300">
+                        <Github size={18} /> GitHub
+                    </button>
+                </div>
+
+                <p className="text-center text-xs text-gray-500 mt-8">
+                    New to Nexus? <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 font-semibold">Create account</Link>
                 </p>
             </div>
         </div>
     );
 };
-
 export default Login;
