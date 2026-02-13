@@ -31,14 +31,14 @@ const Signup = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0B0F19] text-white p-4">
-             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="min-h-screen flex items-center justify-center bg-transparent text-white p-4">
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/10 blur-[100px] rounded-full" />
             </div>
-            
+
             <div className="w-full max-w-md bg-[#131B2C]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10">
                 <div className="text-center mb-8">
-                     <div className="w-12 h-12 bg-gradient-to-tr from-purple-600 to-pink-600 rounded-xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-purple-600/30">
+                    <div className="w-12 h-12 bg-gradient-to-tr from-purple-600 to-pink-600 rounded-xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-purple-600/30">
                         <Cpu className="text-white" size={24} />
                     </div>
                     <h1 className="text-2xl font-bold tracking-tight">Join Nexus</h1>
@@ -49,7 +49,7 @@ const Signup = () => {
                     {error && <div className="p-3 text-xs text-red-400 bg-red-500/10 rounded-lg border border-red-500/20">{error}</div>}
 
                     <div className="space-y-1">
-                         <div className="relative">
+                        <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                             <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Full Name" className="w-full pl-10 pr-4 py-3 bg-[#0B0F19] border border-white/10 rounded-xl focus:border-purple-500 outline-none text-sm text-white placeholder-gray-600" />
                         </div>
@@ -73,7 +73,7 @@ const Signup = () => {
                         {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : 'Create Account'}
                     </button>
                 </form>
-                
+
                 <p className="text-center text-xs text-gray-500 mt-6">
                     Already have an account? <Link to="/login" className="text-purple-400 hover:text-purple-300 font-semibold">Log in</Link>
                 </p>

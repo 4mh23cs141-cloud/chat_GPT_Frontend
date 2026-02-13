@@ -1,15 +1,116 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Send, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  ImageIcon,
+  BookOpen,
+  Sparkles,
+  Search,
+  Plus,
+  Paperclip,
+  ArrowUp,
+  User
+} from "lucide-react";
+import Header from "../components/Header";
+
+// Inlined ChatMessage Component
+const ChatMessage = ({ role, content }) => {
+  const isUser = role === 'user';
+  return (
+    <div className={`w-full py-6 transition-all ${isUser ? '' : 'bg-white/5'}`}>
+      <div className="max-w-3xl mx-auto flex gap-4 px-4 md:px-6">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isUser ? 'bg-white/10 border border-white/5' : 'bg-gradient-to-tr from-indigo-500 to-purple-500 text-white shadow-lg shadow-purple-500/20'
+          }`}>
+          {isUser ? <User size={18} className="text-gray-300" /> : <Sparkles size={18} />}
+        </div>
+        <div className="flex-1 space-y-2 overflow-hidden">
+          <div className="font-semibold text-sm text-gray-200">
+            {isUser ? 'You' : 'Nexus AI'}
+          </div>
+          <div className="text-[16px] leading-7 text-gray-300 whitespace-pre-wrap break-words">
+            {content}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Inlined ChatInput Component
+const ChatInput = ({ onSend, value, setValue, isLoading }) => {
+  const textareaRef = useRef(null);
+
+  const handleInput = (e) => {
+    setValue(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (value.trim()) {
+        onSend();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [value]);
+
+  return (
+    <div className="w-full max-w-3xl mx-auto px-4 pb-4 md:pb-6">
+      <div className="relative flex flex-col w-full bg-[#1e293b]/50 backdrop-blur-xl border border-white/10 rounded-[28px] p-2 transition-all focus-within:bg-[#1e293b]/80 focus-within:border-white/20 focus-within:shadow-xl shadow-lg shadow-black/20">
+        <textarea
+          ref={textareaRef}
+          rows="1"
+          value={value}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask anything..."
+          className="w-full bg-transparent outline-none px-4 py-3 text-lg text-white placeholder-gray-500 resize-none min-h-[56px] max-h-40"
+          disabled={isLoading}
+        />
+        <div className="flex items-center justify-between px-2 pb-1">
+          <div className="flex gap-1">
+            <button className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors" title="Attach file">
+              <Paperclip size={20} />
+            </button>
+            <button className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors" title="Search">
+              <Search size={20} />
+            </button>
+            <button className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors" title="Reason">
+              <Sparkles size={20} />
+            </button>
+          </div>
+          <button
+            onClick={onSend}
+            disabled={!value.trim() || isLoading}
+            className={`p-2.5 rounded-full transition-all shadow-lg ${value.trim() && !isLoading
+              ? 'bg-white text-black hover:bg-gray-200 hover:scale-105 active:scale-95'
+              : 'bg-white/10 text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            <ArrowUp size={20} />
+          </button>
+        </div>
+      </div>
+      <p className="text-[11px] text-gray-500 text-center mt-3">
+        Nexus AI can make mistakes. Check important info.
+      </p>
+    </div>
+  );
+};
 
 const Home = () => {
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -19,145 +120,103 @@ const Home = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Initialize: Create or get first session
-  useEffect(() => {
-    const initSession = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      try {
-        // Get existing sessions
-        const sessionsRes = await fetch(`http://127.0.0.1:8000/sessions?token=${token}`);
-        if (sessionsRes.ok) {
-          const sessions = await sessionsRes.json();
-
-          if (sessions.length > 0) {
-            // Use most recent session
-            setCurrentSessionId(sessions[0].id);
-            await loadSessionMessages(sessions[0].id, token);
-          } else {
-            // Create first session
-            const createRes = await fetch(`http://127.0.0.1:8000/sessions?token=${token}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ title: "New Chat" })
-            });
-
-            if (createRes.ok) {
-              const newSession = await createRes.json();
-              setCurrentSessionId(newSession.id);
-            }
-          }
-        } else if (sessionsRes.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/login');
-        }
-      } catch (err) {
-        console.error("Session init failed:", err);
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
-    initSession();
-  }, [navigate]);
-
-  const loadSessionMessages = async (sessionId, token) => {
-    try {
-      const response = await fetch(`http://127.0.0.1:8000/sessions/${sessionId}/messages?token=${token}`);
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.map(m => ({ role: m.role, content: m.content })));
-      }
-    } catch (err) {
-      console.error("Failed to load messages:", err);
-    }
-  };
-
   const handleSend = async () => {
-    if (!input.trim() || loading || !currentSessionId) return;
+    if (!inputValue.trim()) return;
 
-    const token = localStorage.getItem('token');
-    const userMsg = input;
+    const userMessage = { role: "user", content: inputValue };
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setIsLoading(true);
 
-    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
-    setInput("");
-    setLoading(true);
+    // Simulate AI response
+    setTimeout(() => {
+      const userText = userMessage.content.trim().toLowerCase();
 
-    try {
-      const response = await fetch(`http://127.0.0.1:8000/ask?token=${token}&session_id=${currentSessionId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg, system_prompt: "You are Nexus AI." })
-      });
+      let replyText = "";
 
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      if (userText === "i am sanjay") {
+        replyText = "PS HULI, how can I assist today?";
       } else {
-        throw new Error("Neural connection failure");
+        replyText = `I'm NEXUS AI. I received your message: "${userMessage.content}". How can I assist today?`;
       }
-    } catch (e) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Connection lost. Please try again." }]);
-    } finally {
-      setLoading(false);
-    }
+
+      const aiMessage = {
+        role: "assistant",
+        content: replyText,
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+      setIsLoading(false);
+    }, 1000);
   };
 
-  if (initialLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="animate-spin text-indigo-500" size={32} />
-      </div>
-    );
-  }
+
+  const isLanding = messages.length === 0;
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-[#0B0F19] to-[#131B2C]">
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <h1 className="text-4xl font-bold text-white mb-4">Welcome to Nexus AI</h1>
-            <p className="text-gray-400">Start a conversation to unlock the power of AI</p>
+    <div className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden">
+      <Header />
+
+      <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
+        {isLanding ? (
+          <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-10 tracking-tight text-center drop-shadow-2xl">
+              What can I help with?
+            </h1>
+
+            <ChatInput
+              value={inputValue}
+              setValue={setInputValue}
+              onSend={handleSend}
+              isLoading={isLoading}
+            />
+
+            <div className="flex flex-wrap gap-3 mt-8 justify-center max-w-2xl px-4">
+              {[
+                { label: "Create image", icon: ImageIcon },
+                { label: "Summarize text", icon: BookOpen },
+                { label: "Brainstorm", icon: Sparkles },
+                { label: "Analyze data", icon: Search },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  className="flex items-center gap-2 px-4 py-2 text-sm border border-white/10 rounded-full text-gray-300 hover:bg-white/10 hover:border-white/20 hover:text-white transition-all shadow-sm backdrop-blur-sm"
+                >
+                  <item.icon size={16} className="text-indigo-400" />
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
-          messages.map((msg, idx) => (
-            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[70%] p-4 rounded-2xl ${msg.role === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'glass text-gray-100'
-                }`}>
-                <p className="whitespace-pre-wrap">{msg.content}</p>
+          <div className="flex flex-col w-full">
+            {messages.map((msg, index) => (
+              <ChatMessage key={index} role={msg.role} content={msg.content} />
+            ))}
+            {isLoading && (
+              <div className="max-w-3xl mx-auto w-full px-4 md:px-6 py-6 flex gap-4 animate-pulse">
+                <div className="w-8 h-8 rounded-full bg-indigo-500/20 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-white/10 rounded w-1/4" />
+                  <div className="h-4 bg-white/10 rounded w-3/4" />
+                </div>
               </div>
-            </div>
-          ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-6 border-t border-white/10">
-        <div className="flex gap-3 items-center">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Query Nexus AI..."
-            className="flex-1 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            disabled={loading}
+      {!isLanding && (
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#0B0F19] via-[#0B0F19] to-transparent pt-10">
+          <ChatInput
+            value={inputValue}
+            setValue={setInputValue}
+            onSend={handleSend}
+            isLoading={isLoading}
           />
-          <button
-            onClick={handleSend}
-            disabled={loading || !input.trim()}
-            className="p-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-2xl transition-colors"
-          >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
-          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 };

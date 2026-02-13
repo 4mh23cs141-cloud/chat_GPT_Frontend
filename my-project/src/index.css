@@ -10,9 +10,10 @@ body {
     margin: 0;
     display: flex;
     min-height: 100vh;
-    background: radial-gradient(circle at 50% 50%, #131B2C 0%, #0B0F19 100%);
+    background: radial-gradient(circle at 50% 0%, #172036 0%, #0B0F19 100%);
     color: #f3f4f6;
     overflow: hidden;
+    font-family: 'Inter', sans-serif;
 }
 
 /* Glassmorphism primitives */

@@ -1,147 +1,81 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, Info, Mail, Settings, User, LogOut, Plus, Cpu, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import {
+    MessageSquare,
+    History,
+    Settings,
+    Plus,
+    PanelLeftClose,
+    PanelLeftOpen,
+    User,
+    LayoutGrid,
+    LayoutDashboard // Added for Dashboard
+} from 'lucide-react';
 
-const Sidebar = ({ isOpen, currentSessionId, onSessionChange }) => {
+const Sidebar = () => {
+    const [isOpen, setIsOpen] = useState(true);
     const location = useLocation();
-    const navigate = useNavigate();
-    const [sessions, setSessions] = useState([]);
 
-    useEffect(() => {
-        fetchSessions();
-    }, []);
-
-    const fetchSessions = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        try {
-            const response = await fetch(`http://127.0.0.1:8000/sessions?token=${token}`);
-            if (response.ok) {
-                const data = await response.json();
-                setSessions(data);
-            }
-        } catch (err) {
-            console.error("Failed to fetch sessions:", err);
-        }
-    };
-
-    const handleNewChat = async () => {
-        const token = localStorage.getItem('token');
-        try {
-            const response = await fetch(`http://127.0.0.1:8000/sessions?token=${token}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: "New Chat" })
-            });
-
-            if (response.ok) {
-                const newSession = await response.json();
-                setSessions(prev => [newSession, ...prev]);
-                if (onSessionChange) onSessionChange(newSession.id);
-                navigate('/');
-            }
-        } catch (err) {
-            console.error("Failed to create session:", err);
-        }
-    };
-
-    const handleDeleteSession = async (sessionId, e) => {
-        e.stopPropagation();
-        const token = localStorage.getItem('token');
-
-        try {
-            const response = await fetch(`http://127.0.0.1:8000/sessions/${sessionId}?token=${token}`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) {
-                setSessions(prev => prev.filter(s => s.id !== sessionId));
-                if (currentSessionId === sessionId && onSessionChange) {
-                    // Switch to first available session or create new one
-                    const remaining = sessions.filter(s => s.id !== sessionId);
-                    if (remaining.length > 0) {
-                        onSessionChange(remaining[0].id);
-                    } else {
-                        handleNewChat();
-                    }
-                }
-            }
-        } catch (err) {
-            console.error("Failed to delete session:", err);
-        }
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/login');
-    };
-
-    const menu = [
-        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-        { name: 'Nexus Chat', path: '/', icon: MessageSquare },
-        { name: 'About', path: '/about', icon: Info },
-        { name: 'Contact', path: '/contact', icon: Mail },
+    // Updated menu items list
+    const menuItems = [
+        { name: 'New Chat', icon: Plus, path: '/', primary: true },
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+        { name: 'History', icon: History, path: '/history' },
+        { name: 'Library', icon: LayoutGrid, path: '/library' },
+        { name: 'About', icon: MessageSquare, path: '/about' },
+        { name: 'Contact', icon: MessageSquare, path: '/contact' },
     ];
 
     return (
-        <div className={`h-screen bg-[#080b12] border-r border-white/5 transition-all duration-300 ${isOpen ? 'w-72' : 'w-0'} flex flex-col overflow-hidden`}>
-            <div className="p-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <Cpu size={18} className="text-white" />
-                </div>
-                <span className="font-bold text-xl text-white tracking-tighter">NEXUS AI</span>
+        <div className={`flex flex-col h-screen bg-[#0B0F19] border-r border-white/10 transition-all duration-300 ${isOpen ? 'w-64' : 'w-20'}`}>
+
+            {/* Header with Toggle Button */}
+            <div className="flex items-center justify-between p-4">
+                {isOpen && <span className="font-bold text-xl text-white tracking-tight">Nexus AI</span>}
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="p-2 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors"
+                    title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+                >
+                    {isOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
+                </button>
             </div>
 
-            <div className="flex-1 px-4 py-4 space-y-2 overflow-y-auto custom-scrollbar">
-                <button onClick={handleNewChat} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white text-black font-bold mb-4 shadow-lg hover:scale-[1.02] transition-transform w-full">
-                    <Plus size={18} /> New Chat
-                </button>
-
-                {/* Chat History */}
-                <div className="space-y-1 mb-4">
-                    {sessions.map(session => (
-                        <div
-                            key={session.id}
-                            onClick={() => onSessionChange && onSessionChange(session.id)}
-                            className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all group ${currentSessionId === session.id ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white hover:bg-white/5'
+            {/* Navigation Links */}
+            <div className="flex-1 overflow-y-auto px-2 py-4">
+                {menuItems.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                        <Link
+                            key={item.name}
+                            to={item.path}
+                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all ${item.primary
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20 hover:opacity-90'
+                                : isActive
+                                    ? 'bg-white/10 text-white font-semibold'
+                                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
                                 }`}
                         >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <MessageSquare size={14} className="shrink-0" />
-                                <span className="text-xs truncate">{session.title}</span>
-                            </div>
-                            <button
-                                onClick={(e) => handleDeleteSession(session.id, e)}
-                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all"
-                            >
-                                <Trash2 size={12} className="text-red-400" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-
-                {menu.map(item => (
-                    <Link key={item.path} to={item.path} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${location.pathname === item.path ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
-                        <item.icon size={18} /> {item.name}
-                    </Link>
-                ))}
+                            <item.icon size={20} className={item.primary ? 'text-white' : ''} />
+                            {isOpen && <span className="truncate">{item.name}</span>}
+                        </Link>
+                    );
+                })}
             </div>
 
-            <div className="p-4 border-t border-white/5 space-y-2">
-                <Link to="/profile" className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300 text-xs font-bold">U</div>
-                    <div className="text-sm font-medium text-gray-300">User Profile</div>
-                </Link>
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 w-full p-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all text-sm font-medium"
-                >
-                    <LogOut size={18} />
-                    <span>Logout</span>
+            {/* Footer Actions */}
+            <div className="p-4 border-t border-white/10">
+                <button className="flex items-center gap-3 w-full px-3 py-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all">
+                    <Settings size={20} />
+                    {isOpen && <span>Settings</span>}
+                </button>
+                <button className="flex items-center gap-3 w-full px-3 py-2 mt-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all">
+                    <User size={20} />
+                    {isOpen && <span>Profile</span>}
                 </button>
             </div>
         </div>
     );
 };
+
 export default Sidebar;
