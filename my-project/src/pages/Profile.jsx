@@ -3,298 +3,235 @@ import { useNavigate } from 'react-router-dom';
 import {
     User,
     Mail,
-    Shield,
-    Bell,
-    Moon,
-    Globe,
-    CreditCard,
-    ChevronRight,
-    Camera,
+    Calendar,
+    MessageSquare,
+    LogOut,
+    Edit2,
     Save,
-    X,
-    Loader2,
-    AlertCircle
+    X
 } from 'lucide-react';
+import Header from '../components/Header';
 
 const Profile = () => {
+    const [userProfile, setUserProfile] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedProfile, setEditedProfile] = useState({});
+    const [stats, setStats] = useState({ totalChats: 0, totalMessages: 0 });
     const navigate = useNavigate();
 
-    // --- State Management ---
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
-
-    const [userData, setUserData] = useState({
-        name: "User",
-        email: "",
-        plan: "Pro Plan",
-        joinedDate: "February 2026"
-    });
-
-    const [settings, setSettings] = useState({
-        appearance: "Dark Mode",
-        notifications: "Enabled",
-        language: "English (US)",
-        twoFactor: "Disabled"
-    });
-
-    // --- Fetch User Data ---
+    // Load user profile from localStorage
     useEffect(() => {
-        const fetchProfile = async () => {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                navigate('/login');
-                return;
+        const loadProfile = () => {
+            const savedProfile = localStorage.getItem('nexus_user_profile');
+            if (savedProfile) {
+                try {
+                    const parsed = JSON.parse(savedProfile);
+                    setUserProfile(parsed);
+                    setEditedProfile(parsed);
+                } catch (error) {
+                    console.error('Failed to load profile:', error);
+                }
+            } else {
+                // Create default profile if none exists
+                const defaultProfile = {
+                    name: 'Guest User',
+                    email: 'guest@nexusai.com',
+                    createdAt: new Date().toISOString(),
+                    lastLogin: new Date().toISOString()
+                };
+                setUserProfile(defaultProfile);
+                setEditedProfile(defaultProfile);
+                localStorage.setItem('nexus_user_profile', JSON.stringify(defaultProfile));
             }
 
-            try {
-                const response = await fetch('http://127.0.0.1:8000/profile', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setUserData({
-                        name: data.full_name || data.email?.split('@')[0] || "User",
-                        email: data.email || "",
-                        plan: data.plan || "Pro Plan",
-                        joinedDate: data.created_at ? new Date(data.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "February 2026"
-                    });
-                } else if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    navigate('/login');
-                } else {
-                    console.warn("Profile endpoint not found, using session data.");
-                    setUserData(prev => ({ ...prev, email: "user@example.com" }));
-                }
-            } catch (err) {
-                console.error("Failed to fetch profile:", err);
-                setError("Could not connect to the server. Please check your connection.");
-            } finally {
-                setLoading(false);
+            // Load stats
+            const sessions = localStorage.getItem('nexus_chat_sessions');
+            if (sessions) {
+                const parsed = JSON.parse(sessions);
+                const totalChats = parsed.length;
+                const totalMessages = parsed.reduce((acc, s) => acc + s.messageCount, 0);
+                setStats({ totalChats, totalMessages });
             }
         };
 
-        fetchProfile();
-    }, [navigate]);
+        loadProfile();
+    }, []);
 
-    // --- Handlers ---
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setUserData(prev => ({ ...prev, [name]: value }));
+    const handleEdit = () => {
+        setIsEditing(true);
     };
 
-    const toggleSetting = (key, options) => {
-        const currentIndex = options.indexOf(settings[key]);
-        const nextIndex = (currentIndex + 1) % options.length;
-        setSettings(prev => ({ ...prev, [key]: options[nextIndex] }));
+    const handleSave = () => {
+        localStorage.setItem('nexus_user_profile', JSON.stringify(editedProfile));
+        setUserProfile(editedProfile);
+        setIsEditing(false);
     };
 
-    const handleDeleteAccount = () => {
-        if (window.confirm("Are you absolutely sure you want to delete your account? This action cannot be undone.")) {
-            alert("Account deletion request submitted.");
+    const handleCancel = () => {
+        setEditedProfile(userProfile);
+        setIsEditing(false);
+    };
+
+    const handleLogout = () => {
+        if (window.confirm('Are you sure you want to logout?')) {
+            // Clear user session but keep chat history
+            localStorage.removeItem('nexus_user_profile');
+            navigate('/login');
         }
     };
 
-    const handleCameraClick = () => {
-        alert("Profile picture upload feature coming soon!");
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
     };
 
-    if (loading) {
+    if (!userProfile) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center bg-[#fafafa]">
-                <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
-                <p className="text-gray-500 mt-4 font-medium">Loading your profile...</p>
+            <div className="flex-1 flex items-center justify-center">
+                <div className="text-gray-400">Loading profile...</div>
             </div>
         );
     }
-
-    if (error) {
-        return (
-            <div className="flex-1 flex flex-col items-center justify-center bg-[#fafafa] p-6 text-center">
-                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
-                    <AlertCircle size={32} />
-                </div>
-                <h2 className="text-xl font-bold text-gray-900">Oops! Something went wrong</h2>
-                <p className="text-gray-500 mt-2 max-w-sm">{error}</p>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="mt-6 px-6 py-2 bg-black text-white rounded-xl font-semibold hover:bg-gray-800 transition-all"
-                >
-                    Retry
-                </button>
-            </div>
-        );
-    }
-
-    // --- UI Sections Definition ---
-    const sections = [
-        {
-            title: "Personal Information",
-            items: [
-                { icon: User, label: "Name", value: userData.name, editable: true, name: "name" },
-                { icon: Mail, label: "Email", value: userData.email, editable: true, name: "email" },
-                {
-                    icon: Globe,
-                    label: "Language",
-                    value: settings.language,
-                    onClick: () => toggleSetting("language", ["English (US)", "Hindi", "Spanish", "French"])
-                },
-            ]
-        },
-        {
-            title: "Preferences",
-            items: [
-                {
-                    icon: Moon,
-                    label: "Appearance",
-                    value: settings.appearance,
-                    onClick: () => toggleSetting("appearance", ["Dark Mode", "Light Mode", "System"])
-                },
-                {
-                    icon: Bell,
-                    label: "Notifications",
-                    value: settings.notifications,
-                    onClick: () => toggleSetting("notifications", ["Enabled", "Disabled", "Priority Only"])
-                },
-            ]
-        },
-        {
-            title: "Security & Billing",
-            items: [
-                {
-                    icon: Shield,
-                    label: "Two-Factor Auth",
-                    value: settings.twoFactor,
-                    onClick: () => toggleSetting("twoFactor", ["Enabled", "Disabled"])
-                },
-                {
-                    icon: CreditCard,
-                    label: "Subscription",
-                    value: userData.plan,
-                    onClick: () => alert("Redirecting to billing portal...")
-                },
-            ]
-        }
-    ];
 
     return (
-        <div className="flex-1 overflow-y-auto bg-[#fafafa]">
-            <div className="max-w-4xl mx-auto py-12 px-6">
-                <div className="mb-10 flex justify-between items-end">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">User Profile</h1>
-                        <p className="text-gray-500 mt-2">Manage your account settings and preferences.</p>
-                    </div>
-                </div>
+        <div className="flex-1 flex flex-col h-full bg-transparent overflow-hidden">
+            <Header />
 
-                {/* Profile Header Card */}
-                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-8 mb-8">
-                    <div className="relative">
-                        <div className="w-24 h-24 rounded-full bg-black flex items-center justify-center text-white text-3xl font-bold uppercase transition-all">
-                            {userData.name ? userData.name[0] : "?"}
+            <div className="flex-1 overflow-y-auto p-6 lg:p-10">
+                <div className="max-w-4xl mx-auto">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                            <User className="text-indigo-400" size={36} />
+                            Profile
+                        </h1>
+                        <p className="text-gray-400">Manage your account information</p>
+                    </div>
+
+                    {/* Profile Card */}
+                    <div className="bg-[#131B2C] border border-white/5 rounded-2xl p-8 mb-6">
+                        {/* Avatar and Basic Info */}
+                        <div className="flex items-start gap-6 mb-8">
+                            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-3xl font-bold">
+                                {userProfile.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                                {isEditing ? (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm text-gray-400 mb-2">Name</label>
+                                            <input
+                                                type="text"
+                                                value={editedProfile.name}
+                                                onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                                                className="w-full bg-[#1e293b]/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-gray-400 mb-2">Email</label>
+                                            <input
+                                                type="email"
+                                                value={editedProfile.email}
+                                                onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                                                className="w-full bg-[#1e293b]/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500/50"
+                                            />
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={handleSave}
+                                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                                            >
+                                                <Save size={18} />
+                                                Save
+                                            </button>
+                                            <button
+                                                onClick={handleCancel}
+                                                className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                                            >
+                                                <X size={18} />
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-white mb-2">{userProfile.name}</h2>
+                                        <p className="text-gray-400 mb-4">{userProfile.email}</p>
+                                        <button
+                                            onClick={handleEdit}
+                                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                                        >
+                                            <Edit2 size={18} />
+                                            Edit Profile
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
+
+                        {/* Account Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-white/5">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-indigo-500/10 rounded-lg">
+                                    <Calendar className="text-indigo-400" size={20} />
+                                </div>
+                                <div>
+                                    <div className="text-sm text-gray-400">Member Since</div>
+                                    <div className="text-white font-semibold">{formatDate(userProfile.createdAt)}</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-purple-500/10 rounded-lg">
+                                    <Calendar className="text-purple-400" size={20} />
+                                </div>
+                                <div>
+                                    <div className="text-sm text-gray-400">Last Login</div>
+                                    <div className="text-white font-semibold">{formatDate(userProfile.lastLogin)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div className="bg-[#131B2C] border border-white/5 rounded-xl p-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-4 bg-cyan-500/10 rounded-xl">
+                                    <MessageSquare className="text-cyan-400" size={28} />
+                                </div>
+                                <div>
+                                    <div className="text-3xl font-bold text-white">{stats.totalChats}</div>
+                                    <div className="text-gray-400">Total Conversations</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-[#131B2C] border border-white/5 rounded-xl p-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-4 bg-emerald-500/10 rounded-xl">
+                                    <MessageSquare className="text-emerald-400" size={28} />
+                                </div>
+                                <div>
+                                    <div className="text-3xl font-bold text-white">{stats.totalMessages}</div>
+                                    <div className="text-gray-400">Total Messages</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Logout Button */}
+                    <div className="bg-[#131B2C] border border-white/5 rounded-xl p-6">
                         <button
-                            onClick={handleCameraClick}
-                            className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md border border-gray-100 hover:bg-gray-50 transition-colors"
+                            onClick={handleLogout}
+                            className="flex items-center gap-3 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors w-full md:w-auto"
                         >
-                            <Camera size={16} className="text-gray-600" />
+                            <LogOut size={20} />
+                            Logout
                         </button>
                     </div>
-                    <div className="text-center md:text-left">
-                        <h2 className="text-2xl font-bold text-gray-900">{userData.name}</h2>
-                        <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-2">
-                            <span className="px-3 py-1 bg-black text-white text-xs font-semibold rounded-full">
-                                {userData.plan}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                                Joined {userData.joinedDate}
-                            </span>
-                        </div>
-                    </div>
-                    <div className="md:ml-auto flex gap-2">
-                        {isEditing ? (
-                            <>
-                                <button
-                                    onClick={() => setIsEditing(false)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all border border-gray-200"
-                                >
-                                    <X size={18} />
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={() => setIsEditing(false)}
-                                    className="flex items-center gap-2 px-6 py-2 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition-all shadow-md"
-                                >
-                                    <Save size={18} />
-                                    Save Changes
-                                </button>
-                            </>
-                        ) : (
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="px-6 py-2.5 bg-gray-50 text-gray-900 font-semibold rounded-xl hover:bg-gray-100 transition-all border border-gray-200"
-                            >
-                                Edit Profile
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Settings Sections */}
-                <div className="space-y-6">
-                    {sections.map((section) => (
-                        <div key={section.title} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
-                            <div className="px-8 py-5 border-b border-gray-50 bg-gray-50/50">
-                                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">{section.title}</h3>
-                            </div>
-                            <div className="divide-y divide-gray-50">
-                                {section.items.map((item) => (
-                                    <div
-                                        key={item.label}
-                                        onClick={!isEditing && item.onClick ? item.onClick : undefined}
-                                        className={`w-full flex items-center justify-between px-8 py-5 transition-colors group ${!isEditing && item.onClick ? 'cursor-pointer hover:bg-gray-50' : ''}`}
-                                    >
-                                        <div className="flex items-center gap-4 w-full mr-4">
-                                            <div className="p-2.5 bg-gray-100 rounded-xl text-gray-600 group-hover:bg-white group-hover:shadow-sm transition-all flex-shrink-0">
-                                                <item.icon size={20} />
-                                            </div>
-                                            <div className="text-left w-full">
-                                                <p className="text-sm font-bold text-gray-900">{item.label}</p>
-                                                {isEditing && item.editable ? (
-                                                    <input
-                                                        type="text"
-                                                        name={item.name}
-                                                        value={item.value}
-                                                        onChange={handleInputChange}
-                                                        className="mt-1 w-full max-w-md px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-black text-sm"
-                                                    />
-                                                ) : (
-                                                    <p className="text-sm text-gray-500">{item.value}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                        {!isEditing && (item.onClick || item.editable) && (
-                                            <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-900 transition-colors flex-shrink-0" />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="mt-12 pt-8 border-t border-gray-200 flex justify-between items-center text-gray-400">
-                    <p className="text-sm">Account ID: SHIVA-GPT-777-12345</p>
-                    <button
-                        onClick={handleDeleteAccount}
-                        className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors"
-                    >
-                        Delete Account
-                    </button>
                 </div>
             </div>
         </div>

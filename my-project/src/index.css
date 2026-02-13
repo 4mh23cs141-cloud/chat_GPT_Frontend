@@ -57,6 +57,16 @@ body {
     width: 4px;
 }
 
+/* Hide scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 /* Animated Background Orb */
 .orb {
     position: fixed;
@@ -92,5 +102,18 @@ body {
 
     50% {
         transform: translate(50px, 100px);
+    }
+}
+
+/* Touch-friendly interactions */
+.touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Responsive text utilities */
+@media (max-width: 640px) {
+    body {
+        font-size: 14px;
     }
 }

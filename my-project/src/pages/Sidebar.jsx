@@ -45,18 +45,36 @@ const Sidebar = () => {
             <div className="flex-1 overflow-y-auto px-2 py-4">
                 {menuItems.map((item) => {
                     const isActive = location.pathname === item.path;
+
+                    // Special handling for New Chat button
+                    if (item.name === 'New Chat') {
+                        return (
+                            <button
+                                key={item.name}
+                                onClick={() => {
+                                    // Dispatch custom event for new chat
+                                    window.dispatchEvent(new Event('nexus:new-chat'));
+                                    // Navigate to home
+                                    window.location.href = '/';
+                                }}
+                                className="flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20 hover:opacity-90"
+                            >
+                                <item.icon size={20} className="text-white" />
+                                {isOpen && <span className="truncate">{item.name}</span>}
+                            </button>
+                        );
+                    }
+
                     return (
                         <Link
                             key={item.name}
                             to={item.path}
-                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all ${item.primary
-                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20 hover:opacity-90'
-                                : isActive
+                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all ${isActive
                                     ? 'bg-white/10 text-white font-semibold'
                                     : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
                                 }`}
                         >
-                            <item.icon size={20} className={item.primary ? 'text-white' : ''} />
+                            <item.icon size={20} />
                             {isOpen && <span className="truncate">{item.name}</span>}
                         </Link>
                     );
@@ -69,10 +87,13 @@ const Sidebar = () => {
                     <Settings size={20} />
                     {isOpen && <span>Settings</span>}
                 </button>
-                <button className="flex items-center gap-3 w-full px-3 py-2 mt-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all">
+                <Link
+                    to="/profile"
+                    className="flex items-center gap-3 w-full px-3 py-2 mt-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all"
+                >
                     <User size={20} />
                     {isOpen && <span>Profile</span>}
-                </button>
+                </Link>
             </div>
         </div>
     );

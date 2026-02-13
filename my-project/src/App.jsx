@@ -8,6 +8,9 @@ import About from './pages/about';
 import Contact from './pages/contact';
 import Login from './pages/Login';
 import Signup from './pages/signup';
+import Dashboard from './pages/Dashboard';
+import History from './pages/History';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -24,6 +27,9 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
       </div>

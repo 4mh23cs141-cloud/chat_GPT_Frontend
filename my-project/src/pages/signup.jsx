@@ -21,8 +21,18 @@ const Signup = () => {
                 body: JSON.stringify({ email: formData.email, password: formData.password }),
             });
             const data = await response.json();
-            if (response.ok) navigate('/login');
-            else setError(data.detail || 'Registration failed.');
+            if (response.ok) {
+                // Save user profile data
+                const userProfile = {
+                    name: formData.fullName || formData.email.split('@')[0],
+                    email: formData.email,
+                    createdAt: new Date().toISOString(),
+                    lastLogin: new Date().toISOString()
+                };
+                localStorage.setItem('nexus_user_profile', JSON.stringify(userProfile));
+
+                navigate('/login');
+            } else setError(data.detail || 'Registration failed.');
         } catch (err) {
             setError('Server connection failed.');
         } finally {

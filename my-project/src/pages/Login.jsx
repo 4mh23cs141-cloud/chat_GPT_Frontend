@@ -25,6 +25,16 @@ const Login = () => {
 
             if (response.ok) {
                 if (data.access_token) localStorage.setItem('token', data.access_token);
+
+                // Save user profile data
+                const userProfile = {
+                    name: formData.email.split('@')[0], // Use email prefix as name for now
+                    email: formData.email,
+                    createdAt: new Date().toISOString(), // In real app, this comes from backend
+                    lastLogin: new Date().toISOString()
+                };
+                localStorage.setItem('nexus_user_profile', JSON.stringify(userProfile));
+
                 navigate('/');
             } else {
                 setError(data.detail || 'Access Denied: Invalid credentials.');
