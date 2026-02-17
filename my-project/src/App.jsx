@@ -11,6 +11,8 @@ import Signup from './pages/signup';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Profile from './pages/Profile';
+import Library from './pages/Library';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/library" element={<Library />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
       </div>

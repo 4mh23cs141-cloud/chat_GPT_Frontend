@@ -70,8 +70,8 @@ const Sidebar = () => {
                             key={item.name}
                             to={item.path}
                             className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all ${isActive
-                                    ? 'bg-white/10 text-white font-semibold'
-                                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                                ? 'bg-white/10 text-white font-semibold'
+                                : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
                                 }`}
                         >
                             <item.icon size={20} />
@@ -83,10 +83,13 @@ const Sidebar = () => {
 
             {/* Footer Actions */}
             <div className="p-4 border-t border-white/10">
-                <button className="flex items-center gap-3 w-full px-3 py-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all">
+                <Link
+                    to="/settings"
+                    className="flex items-center gap-3 w-full px-3 py-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all"
+                >
                     <Settings size={20} />
                     {isOpen && <span>Settings</span>}
-                </button>
+                </Link>
                 <Link
                     to="/profile"
                     className="flex items-center gap-3 w-full px-3 py-2 mt-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all"

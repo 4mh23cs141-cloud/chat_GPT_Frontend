@@ -98,8 +98,11 @@ const ChatMessage = ({ role, content }) => {
 };
 
 // Inlined ChatInput Component
-const ChatInput = ({ onSend, value, setValue, isLoading }) => {
+const ChatInput = ({ onSend, value, setValue, isLoading, onAttachment }) => {
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isReasoningActive, setIsReasoningActive] = useState(false);
 
   const handleInput = (e) => {
     setValue(e.target.value);
@@ -113,8 +116,19 @@ const ChatInput = ({ onSend, value, setValue, isLoading }) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (value.trim()) {
-        onSend();
+        onSend({ search: isSearchActive, reasoning: isReasoningActive });
       }
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && onAttachment) {
+      onAttachment(file);
+    }
+    // Reset input so same file can be selected again if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -140,18 +154,36 @@ const ChatInput = ({ onSend, value, setValue, isLoading }) => {
         />
         <div className="flex items-center justify-between px-2 pb-1">
           <div className="flex gap-1">
-            <button className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors" title="Attach file">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors"
+              title="Attach file"
+            >
               <Paperclip size={20} />
             </button>
-            <button className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors" title="Search">
+            <button
+              onClick={() => setIsSearchActive(!isSearchActive)}
+              className={`p-2 rounded-xl transition-colors ${isSearchActive ? 'bg-indigo-500/20 text-indigo-400' : 'hover:bg-white/10 text-gray-400 hover:text-white'}`}
+              title="Search"
+            >
               <Search size={20} />
             </button>
-            <button className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors" title="Reason">
+            <button
+              onClick={() => setIsReasoningActive(!isReasoningActive)}
+              className={`p-2 rounded-xl transition-colors ${isReasoningActive ? 'bg-indigo-500/20 text-indigo-400' : 'hover:bg-white/10 text-gray-400 hover:text-white'}`}
+              title="Reason"
+            >
               <Sparkles size={20} />
             </button>
           </div>
           <button
-            onClick={onSend}
+            onClick={() => onSend({ search: isSearchActive, reasoning: isReasoningActive })}
             disabled={!value.trim() || isLoading}
             className={`p-2 sm:p-2.5 rounded-full transition-all shadow-lg touch-manipulation ${value.trim() && !isLoading
               ? 'bg-white text-black hover:bg-gray-200 active:scale-95'
@@ -247,10 +279,18 @@ const Home = () => {
     return () => window.removeEventListener('nexus:new-chat', handleNewChat);
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!inputValue.trim()) return;
+  const handleSend = async (textOverride = null, options = {}) => {
+    const textToSend = typeof textOverride === 'string' ? textOverride : inputValue;
 
-    const userMessage = { role: "user", content: inputValue };
+    if (!textToSend.trim()) return;
+
+    let finalContent = textToSend;
+    // Append capability indicators to the user message content locally for visibility
+    // In a real app, these would probably be system instructions or flags sent to the API
+    if (options.search) finalContent = `[Web Search] ${finalContent}`;
+    if (options.reasoning) finalContent = `[Reasoning] ${finalContent}`;
+
+    const userMessage = { role: "user", content: finalContent };
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsLoading(true);
@@ -302,6 +342,19 @@ const Home = () => {
     }
   };
 
+  const handleAttachment = (file) => {
+    // For now, we'll just simulate an attachment by adding a system message or notification
+    // In a real app, this would upload the file or convert to base64
+    const attachmentMessage = {
+      role: "user",
+      content: `[Attached file: ${file.name}]`
+    };
+
+    // Auto-send the attachment notification for now, or just populate input
+    // Let's populate input to be safe
+    setInputValue(prev => prev ? `${prev}\n[Attached: ${file.name}]` : `[Attached: ${file.name}] `);
+  };
+
   const isLanding = messages.length === 0;
 
   return (
@@ -322,8 +375,9 @@ const Home = () => {
             <ChatInput
               value={inputValue}
               setValue={setInputValue}
-              onSend={handleSend}
+              onSend={(options) => handleSend(null, options)}
               isLoading={isLoading}
+              onAttachment={handleAttachment}
             />
 
             <div className="flex flex-wrap gap-2 sm:gap-3 mt-6 sm:mt-8 justify-center max-w-2xl px-4">
@@ -335,6 +389,7 @@ const Home = () => {
               ].map((item) => (
                 <button
                   key={item.label}
+                  onClick={() => handleSend(item.label)}
                   className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm border border-white/10 rounded-full text-gray-300 hover:bg-white/10 hover:border-white/20 hover:text-white transition-all shadow-sm backdrop-blur-sm touch-manipulation"
                 >
                   <item.icon size={14} className="text-indigo-400 sm:w-4 sm:h-4" />
@@ -367,8 +422,9 @@ const Home = () => {
           <ChatInput
             value={inputValue}
             setValue={setInputValue}
-            onSend={handleSend}
+            onSend={(options) => handleSend(null, options)}
             isLoading={isLoading}
+            onAttachment={handleAttachment}
           />
         </div>
       )}
