@@ -11,7 +11,7 @@ import {
   User
 } from "lucide-react";
 import Header from "../components/Header";
-
+import ChatMessage from "../components/ChatMessage";
 // Utility functions for chat session management
 const ChatSessionManager = {
   // Get all chat sessions
@@ -74,28 +74,7 @@ const ChatSessionManager = {
   }
 };
 
-// Inlined ChatMessage Component
-const ChatMessage = ({ role, content }) => {
-  const isUser = role === 'user';
-  return (
-    <div className={`w-full py-6 transition-all ${isUser ? '' : 'bg-white/5'}`}>
-      <div className="max-w-3xl mx-auto flex gap-4 px-4 md:px-6">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isUser ? 'bg-white/10 border border-white/5' : 'bg-gradient-to-tr from-indigo-500 to-purple-500 text-white shadow-lg shadow-purple-500/20'
-          }`}>
-          {isUser ? <User size={18} className="text-gray-300" /> : <Sparkles size={18} />}
-        </div>
-        <div className="flex-1 space-y-2 overflow-hidden">
-          <div className="font-semibold text-sm text-gray-200">
-            {isUser ? 'You' : 'Nexus AI'}
-          </div>
-          <div className="text-[16px] leading-7 text-gray-300 whitespace-pre-wrap break-words">
-            {content}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+// Header imported above
 
 // Inlined ChatInput Component
 const ChatInput = ({ onSend, value, setValue, isLoading, onAttachment }) => {
