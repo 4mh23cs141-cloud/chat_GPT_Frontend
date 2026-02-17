@@ -57,6 +57,8 @@ export async function getAIResponse(message, systemPrompt = "You are a helpful a
             throw new Error("Cannot connect to AI backend. Please make sure the FastAPI server is running at http://127.0.0.1:8000");
         } else if (error.message?.includes("CORS")) {
             throw new Error("CORS error. Please check your FastAPI CORS configuration.");
+        } else if (error.message?.includes("405")) {
+            throw new Error("Method Not Allowed (405). Please check that your backend URL includes the correct endpoint (e.g., /ask).");
         }
 
         throw error;
