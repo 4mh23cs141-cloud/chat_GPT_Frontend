@@ -3,7 +3,7 @@
  * Backend URL: http://127.0.0.1:8000/ask
  */
 
-const BACKEND_URL = "http://127.0.0.1:8000/ask";
+const BACKEND_URL = import.meta.env.VITE_AI_BACKEND_URL || "http://127.0.0.1:8000/ask";
 
 /**
  * Send a message to the FastAPI backend and get AI response
